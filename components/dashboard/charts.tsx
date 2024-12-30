@@ -16,10 +16,25 @@ const COLORS = ['#22c55e', '#3b82f6', '#ef4444', '#f97316']
 
 export function DashboardCharts() {
   const { simulationData } = useSimulation();
-  const currentYear = simulationData.length > 0 ? simulationData[simulationData.length - 1] : null;
+  const currentYear = simulationData[0];
 
-  if (!currentYear) {
-    return <div>Loading simulation data...</div>;
+  if (!currentYear || simulationData.length === 0) {
+    return (
+      <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Loading simulation data...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="animate-pulse">Loading...</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   // Calculate net worth distribution for the current year

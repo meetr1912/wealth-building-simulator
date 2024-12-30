@@ -26,7 +26,20 @@ export function DashboardContent() {
   const finalYear = simulationData[simulationData.length - 1]
 
   if (!currentYear || !nextYear || !finalYear) {
-    return <div>Loading simulation data...</div>
+    return (
+      <div className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Initializing Simulation...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] flex items-center justify-center">
+              <div className="animate-pulse">Loading simulation data...</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const homeValueChange = currentYear.homeValue > 0 ? 

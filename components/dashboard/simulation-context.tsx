@@ -172,6 +172,11 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
     setParams(prev => ({ ...prev, [key]: value }))
   }
 
+  // Run simulation when component mounts and when params change
+  useEffect(() => {
+    calculateSimulation()
+  }, [])
+
   useEffect(() => {
     calculateSimulation()
   }, [params])
