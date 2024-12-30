@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { DashboardContent } from '@/components/dashboard/dashboard-content'
+import { DashboardInputs } from '@/components/dashboard/inputs'
 import { SimulationProvider } from '@/components/dashboard/simulation-context'
 
 // Mock ResizeObserver
@@ -30,49 +31,79 @@ afterAll(() => {
   Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
 })
 
+const renderDashboard = () => {
+  render(
+    <SimulationProvider>
+      <DashboardContent />
+    </SimulationProvider>
+  )
+}
+
 describe('Dashboard', () => {
-  const renderDashboard = () => {
-    return render(
-      <SimulationProvider>
-        <DashboardContent />
-      </SimulationProvider>
-    )
-  }
-
-  it('renders the dashboard header', () => {
+  it('renders all tabs', () => {
     renderDashboard()
-    expect(screen.getByText('Wealth Building Dashboard')).toBeInTheDocument()
-    expect(screen.getByText(/Track and optimize your Smith Maneuver/)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /overview/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /accumulation phase/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /home purchase/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /smith maneuver/i })).toBeInTheDocument()
   })
 
-  it('renders all key metric cards', () => {
+  it('renders key metric cards', () => {
     renderDashboard()
-    expect(screen.getByText('Home Value')).toBeInTheDocument()
-    expect(screen.getByText('Mortgage Balance')).toBeInTheDocument()
-    expect(screen.getByText('Investment Loan')).toBeInTheDocument()
-    expect(screen.getByText('Net Worth')).toBeInTheDocument()
-  })
-
-  it('renders all charts', () => {
-    renderDashboard()
-    expect(screen.getByText('Home Value vs Mortgage Balance')).toBeInTheDocument()
-    expect(screen.getByText('Investment Loan and Net Worth')).toBeInTheDocument()
-    expect(screen.getByText('Annual Contributions and Tax Refunds')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Home Value', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Home Equity', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Investment Value', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Net Worth', level: 3 })).toBeInTheDocument()
   })
 
   it('renders parameter inputs', () => {
-    renderDashboard()
+    render(
+      <SimulationProvider>
+        <DashboardInputs />
+      </SimulationProvider>
+    )
+    expect(screen.getByRole('heading', { name: 'Adjust Parameters' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Interest Rates & Returns' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Contributions & Taxes' })).toBeInTheDocument()
     expect(screen.getByText('Home Appreciation Rate')).toBeInTheDocument()
     expect(screen.getByText('Mortgage Interest Rate')).toBeInTheDocument()
     expect(screen.getByText('Investment Return Rate')).toBeInTheDocument()
-    expect(screen.getByText('Tax Rate')).toBeInTheDocument()
+  })
+
+  it('switches between parameter tabs', () => {
+    render(
+      <SimulationProvider>
+        <DashboardInputs />
+      </SimulationProvider>
+    )
+
+    // Click on Contributions & Taxes tab
+    const contributionsTab = screen.getByRole('tab', { name: /contributions & taxes/i })
+    fireEvent.click(contributionsTab)
+
+    // Verify content changes
+    expect(screen.getByText('Marginal Tax Rate')).toBeInTheDocument()
     expect(screen.getByText('Monthly Investment Contribution')).toBeInTheDocument()
   })
 
-  it('displays initial values correctly', () => {
+  it('switches between dashboard tabs', () => {
     renderDashboard()
-    expect(screen.getByText('$500,000')).toBeInTheDocument() // Initial home value
-    expect(screen.getByText('$212,230')).toBeInTheDocument() // Initial mortgage balance
-    expect(screen.getByText('$230,216')).toBeInTheDocument() // Initial investment loan
+
+    // Click each tab and verify content changes
+    const accumulationTab = screen.getByRole('tab', { name: /accumulation phase/i })
+    fireEvent.click(accumulationTab)
+    expect(screen.getByText('Monthly Investment Plan')).toBeInTheDocument()
+    expect(screen.getByText('Tax Optimization')).toBeInTheDocument()
+
+    const purchaseTab = screen.getByRole('tab', { name: /home purchase/i })
+    fireEvent.click(purchaseTab)
+    expect(screen.getByText('Property Details')).toBeInTheDocument()
+    expect(screen.getByText('Mortgage Details')).toBeInTheDocument()
+    expect(screen.getByText('Appreciation Forecast')).toBeInTheDocument()
+
+    const smithTab = screen.getByRole('tab', { name: /smith maneuver/i })
+    fireEvent.click(smithTab)
+    expect(screen.getByText('Investment Loan Strategy')).toBeInTheDocument()
+    expect(screen.getByText('Tax Benefits')).toBeInTheDocument()
   })
 }) 

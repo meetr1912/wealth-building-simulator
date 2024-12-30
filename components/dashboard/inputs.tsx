@@ -83,6 +83,46 @@ export function DashboardInputs() {
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
+                  <Label htmlFor="rrsp-contribution">Annual RRSP Contribution</Label>
+                  <span className="text-sm text-muted-foreground">
+                    ${params.rrspContribution.toLocaleString()}
+                  </span>
+                </div>
+                <Slider
+                  id="rrsp-contribution"
+                  value={[params.rrspContribution]}
+                  onValueChange={([value]) => updateParam('rrspContribution', value)}
+                  max={30000}
+                  step={1000}
+                  className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Annual RRSP contribution. Maximum is 18% of earned income.
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="fhsa-contribution">Annual FHSA Contribution</Label>
+                  <span className="text-sm text-muted-foreground">
+                    ${params.fhsaContribution.toLocaleString()}
+                  </span>
+                </div>
+                <Slider
+                  id="fhsa-contribution"
+                  value={[params.fhsaContribution]}
+                  onValueChange={([value]) => updateParam('fhsaContribution', value)}
+                  max={20000}
+                  step={1000}
+                  className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Annual FHSA contribution. Maximum is $8,000 per year.
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
                   <Label htmlFor="tax-rate">Marginal Tax Rate</Label>
                   <span className="text-sm text-muted-foreground">{params.taxRate}%</span>
                 </div>
@@ -95,27 +135,7 @@ export function DashboardInputs() {
                   className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Your marginal tax rate affects the tax deductions from investment loan interest.
-                </p>
-              </div>
-
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="monthly-contribution">Monthly Investment Contribution</Label>
-                  <span className="text-sm text-muted-foreground">
-                    ${params.monthlyContribution.toLocaleString()}
-                  </span>
-                </div>
-                <Slider
-                  id="monthly-contribution"
-                  value={[params.monthlyContribution]}
-                  onValueChange={([value]) => updateParam('monthlyContribution', value)}
-                  max={10000}
-                  step={100}
-                  className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Regular monthly contributions to your investment portfolio.
+                  Your marginal tax rate affects the tax deductions from RRSP contributions and investment loan interest.
                 </p>
               </div>
             </div>

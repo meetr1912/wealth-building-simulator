@@ -20,20 +20,29 @@ function formatPercentage(value: number) {
 }
 
 export function DashboardContent() {
-  const { simulationData, params } = useSimulation()
+  const { simulationData } = useSimulation()
   const currentYear = simulationData[0]
   const nextYear = simulationData[1]
   const finalYear = simulationData[simulationData.length - 1]
 
-  const homeValueChange = ((nextYear.homeValue - currentYear.homeValue) / currentYear.homeValue) * 100
-  const mortgageChange = ((nextYear.mortgageBalance - currentYear.mortgageBalance) / currentYear.mortgageBalance) * 100
-  const investmentChange = ((nextYear.investmentValue - currentYear.investmentValue) / currentYear.investmentValue) * 100
-  const netWorthChange = ((nextYear.netWorth - currentYear.netWorth) / currentYear.netWorth) * 100
+  if (!currentYear || !nextYear || !finalYear) {
+    return <div>Loading simulation data...</div>
+  }
 
-  const totalGrowth = ((finalYear.netWorth - currentYear.netWorth) / currentYear.netWorth) * 100
-  const monthlyMortgagePayment = currentYear.mortgagePayment / 12
-  const monthlyInvestmentInterest = currentYear.investmentLoanPayment / 12
-  const monthlyTaxSavings = currentYear.taxRefunds / 12
+  const homeValueChange = currentYear.homeValue > 0 ? 
+    ((nextYear.homeValue - currentYear.homeValue) / currentYear.homeValue) * 100 : 0
+  
+  const mortgageChange = currentYear.mortgageBalance > 0 ?
+    ((nextYear.mortgageBalance - currentYear.mortgageBalance) / currentYear.mortgageBalance) * 100 : 0
+  
+  const investmentChange = currentYear.investmentValue > 0 ?
+    ((nextYear.investmentValue - currentYear.investmentValue) / currentYear.investmentValue) * 100 : 0
+  
+  const netWorthChange = currentYear.netWorth > 0 ?
+    ((nextYear.netWorth - currentYear.netWorth) / currentYear.netWorth) * 100 : 0
+
+  const totalGrowth = currentYear.netWorth > 0 ?
+    ((finalYear.netWorth - currentYear.netWorth) / currentYear.netWorth) * 100 : 0
 
   return (
     <div className="space-y-8">
@@ -76,7 +85,10 @@ export function DashboardContent() {
                 <div className="text-2xl font-bold">{formatCurrency(currentYear.homeEquity)}</div>
                 <div className="flex items-center space-x-2">
                   <p className="text-xs text-muted-foreground">
-                    {formatPercentage((currentYear.homeEquity / currentYear.homeValue) * 100)} of home value
+                    {currentYear.homeValue > 0 ? 
+                      formatPercentage((currentYear.homeEquity / currentYear.homeValue) * 100) + ' of home value' :
+                      'No home purchased yet'
+                    }
                   </p>
                 </div>
               </CardContent>
@@ -133,27 +145,27 @@ export function DashboardContent() {
             <CardContent className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <h3 className="font-semibold mb-2">Monthly Investment Plan</h3>
+                  <h3 className="font-semibold mb-2">Investment Plan</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Monthly Contribution: {formatCurrency(params.monthlyContribution)}
+                      RRSP Contribution: {formatCurrency(currentYear.contributions.rrsp)} / year
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Expected Return: {formatPercentage(params.investmentReturnRate)} annually
+                      FHSA Contribution: {formatCurrency(currentYear.contributions.fhsa)} / year
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      5-Year Investment Value: {formatCurrency(finalYear.investmentValue)}
+                      Tax Refunds: {formatCurrency(currentYear.contributions.taxRefunds)} / year
                     </p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-2">Tax Optimization</h3>
+                  <h3 className="font-semibold mb-2">Growth Projections</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Tax Rate: {formatPercentage(params.taxRate)}
+                      Total Investments: {formatCurrency(currentYear.totalInvestments)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Monthly Tax Savings: {formatCurrency(monthlyTaxSavings)}
+                      Investment Returns: {formatCurrency(currentYear.investmentReturns)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Total Growth: {formatPercentage(totalGrowth)} over 5 years
@@ -176,13 +188,16 @@ export function DashboardContent() {
                   <h3 className="font-semibold mb-2">Property Details</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Purchase Price: {formatCurrency(params.homeValue)}
+                      Purchase Price: {formatCurrency(currentYear.homeValue)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Down Payment: {formatCurrency(params.homeValue - params.mortgageBalance)}
+                      Down Payment: {formatCurrency(currentYear.homeEquity)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Down Payment Ratio: {formatPercentage(((params.homeValue - params.mortgageBalance) / params.homeValue) * 100)}
+                      Down Payment Ratio: {currentYear.homeValue > 0 ?
+                        formatPercentage((currentYear.homeEquity / currentYear.homeValue) * 100) :
+                        'N/A'
+                      }
                     </p>
                   </div>
                 </div>
@@ -190,27 +205,27 @@ export function DashboardContent() {
                   <h3 className="font-semibold mb-2">Mortgage Details</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Mortgage Amount: {formatCurrency(params.mortgageBalance)}
+                      Mortgage Amount: {formatCurrency(currentYear.mortgageBalance)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Interest Rate: {formatPercentage(params.mortgageRate)}
+                      Monthly Payment: {formatCurrency(currentYear.mortgagePayment / 12)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Monthly Payment: {formatCurrency(monthlyMortgagePayment)}
+                      Remaining Balance: {formatCurrency(currentYear.mortgageBalance)}
                     </p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-2">Appreciation Forecast</h3>
+                  <h3 className="font-semibold mb-2">Smith Maneuver</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Annual Appreciation: {formatPercentage(params.homeAppreciationRate)}
+                      Investment Loan: {formatCurrency(currentYear.investmentLoan)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      5-Year Value: {formatCurrency(finalYear.homeValue)}
+                      Monthly Interest: {formatCurrency(currentYear.investmentLoanPayment / 12)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Total Equity: {formatCurrency(finalYear.homeEquity)}
+                      Tax Savings: {formatCurrency(currentYear.taxRefunds)}
                     </p>
                   </div>
                 </div>
@@ -230,10 +245,10 @@ export function DashboardContent() {
                   <h3 className="font-semibold mb-2">Investment Loan Strategy</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Loan Amount: {formatCurrency(params.investmentLoan)}
+                      Loan Amount: {formatCurrency(currentYear.investmentLoan)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Monthly Interest: {formatCurrency(monthlyInvestmentInterest)}
+                      Monthly Interest: {formatCurrency(currentYear.investmentLoanPayment / 12)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Tax Deductible Interest: {formatCurrency(currentYear.totalTaxDeductions)}
@@ -244,27 +259,27 @@ export function DashboardContent() {
                   <h3 className="font-semibold mb-2">Tax Benefits</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Tax Rate: {formatPercentage(params.taxRate)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Monthly Tax Refund: {formatCurrency(monthlyTaxSavings)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
                       Annual Tax Savings: {formatCurrency(currentYear.taxRefunds)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Monthly Tax Savings: {formatCurrency(currentYear.taxRefunds / 12)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Tax Savings: {formatCurrency(finalYear.taxRefunds)}
                     </p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-2">Investment Performance</h3>
+                  <h3 className="font-semibold mb-2">Investment Growth</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      Expected Return: {formatPercentage(params.investmentReturnRate)}
+                      Investment Value: {formatCurrency(currentYear.investmentValue)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Current Value: {formatCurrency(currentYear.investmentValue)}
+                      Total Returns: {formatCurrency(currentYear.investmentReturns)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      5-Year Projection: {formatCurrency(finalYear.investmentValue)}
+                      Net Investment: {formatCurrency(currentYear.investmentValue - currentYear.investmentLoan)}
                     </p>
                   </div>
                 </div>
@@ -274,7 +289,7 @@ export function DashboardContent() {
         </TabsContent>
       </Tabs>
 
-      {/* Parameter Controls */}
+      {/* Parameters Control */}
       <DashboardInputs />
     </div>
   )

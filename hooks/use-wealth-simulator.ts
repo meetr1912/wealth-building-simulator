@@ -26,6 +26,8 @@ interface YearlyData {
   mortgagePayment: number
   investmentLoanPayment: number
   totalTaxDeductions: number
+  investmentReturns: number
+  totalInvestments: number
 }
 
 const DEFAULT_PARAMS: SimulationParams = {
@@ -59,26 +61,31 @@ export function useWealthSimulator(initialParams = DEFAULT_PARAMS) {
     
     // Initial year
     const yearlyContribution = params.monthlyContribution * 12
-    const initialInvestmentValue = params.investmentLoan
-    const initialHomeEquity = params.homeValue - params.mortgageBalance
     const yearlyMortgagePayment = monthlyMortgagePayment * 12
     const yearlyInvestmentLoanPayment = monthlyInvestmentLoanInterest * 12
     const totalInterestPaid = yearlyInvestmentLoanPayment
     const taxRefund = totalInterestPaid * (params.taxRate / 100)
+
+    // Initial investment value is the loan amount
+    const initialInvestmentValue = params.investmentLoan
+    const initialHomeEquity = params.homeValue - params.mortgageBalance
+    const initialInvestmentReturns = initialInvestmentValue * (params.investmentReturnRate / 100)
 
     years.push({
       year: currentYear,
       homeValue: params.homeValue,
       mortgageBalance: params.mortgageBalance,
       investmentLoan: params.investmentLoan,
-      investmentValue: initialInvestmentValue,
+      investmentValue: initialInvestmentValue + initialInvestmentReturns,
       homeEquity: initialHomeEquity,
-      netWorth: initialHomeEquity + initialInvestmentValue - params.investmentLoan,
+      netWorth: initialHomeEquity + (initialInvestmentValue + initialInvestmentReturns) - params.investmentLoan,
       contributions: yearlyContribution,
       taxRefunds: taxRefund,
       mortgagePayment: yearlyMortgagePayment,
       investmentLoanPayment: yearlyInvestmentLoanPayment,
-      totalTaxDeductions: totalInterestPaid
+      totalTaxDeductions: totalInterestPaid,
+      investmentReturns: initialInvestmentReturns,
+      totalInvestments: initialInvestmentValue + yearlyContribution
     })
 
     // Project for next 5 years
@@ -97,9 +104,11 @@ export function useWealthSimulator(initialParams = DEFAULT_PARAMS) {
       const investmentLoan = prevYear.investmentLoan
       
       // Calculate investment growth
-      const investmentReturns = prevYear.investmentValue * (params.investmentReturnRate / 100)
-      const investmentValue = prevYear.investmentValue + yearlyContribution + 
-                            prevYear.taxRefunds + investmentReturns
+      // First add contributions and tax refunds
+      const baseInvestmentValue = prevYear.investmentValue + yearlyContribution + prevYear.taxRefunds
+      // Then calculate returns on the total amount
+      const investmentReturns = baseInvestmentValue * (params.investmentReturnRate / 100)
+      const investmentValue = baseInvestmentValue + investmentReturns
       
       const homeEquity = homeValue - mortgageBalance
       const totalInterestPaid = yearlyInvestmentLoanPayment
@@ -117,7 +126,9 @@ export function useWealthSimulator(initialParams = DEFAULT_PARAMS) {
         taxRefunds,
         mortgagePayment: yearlyMortgagePayment,
         investmentLoanPayment: yearlyInvestmentLoanPayment,
-        totalTaxDeductions: totalInterestPaid
+        totalTaxDeductions: totalInterestPaid,
+        investmentReturns,
+        totalInvestments: prevYear.totalInvestments + yearlyContribution
       })
     }
 
